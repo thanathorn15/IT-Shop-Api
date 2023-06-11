@@ -7,8 +7,20 @@ module.exports = (sequelize,DataTypes) => {
                 notEmpty: true
             }
         },
+       
+    },
+    {
         underscored: true
     })
+    Category.associate = (models) => {
+        Category.hasMany(models.Product, {
+            foreignKey: {
+                name: "categoryId",
+                allowNull: false,
+              },
+              onDelete: 'RESTRICT'
+        })
+    }
 
     return Category
 }

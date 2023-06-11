@@ -28,7 +28,7 @@ module.exports = (sequelize,DataTypes) => {
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: false,
+            // allowNull: false,
             unique: true,
             validate: {
                 is: /^[0-9]{10}$/
@@ -36,18 +36,40 @@ module.exports = (sequelize,DataTypes) => {
         },
         role: {
             type:DataTypes.ENUM('ADMIN','USER'),
-            allowNull: false,
+            // allowNull: false,
            
         },
         deliveryAddress: {
             type: DataTypes.STRING,
-            allowNull: false,
+            // allowNull: false,
            
         },
         
-        underscored: true
+       
     
+    },
+    {
+        underscored: true
+    }
+    )
+User.associate = (models) => {
+
+    User.hasMany(models.Cart, {
+        foreignKey: {
+            name: 'userId',
+            allowNull: false
+        },
+        onDelete: 'RESTRICT'
     })
+    User.hasMany(models.Order, {
+        foreignKey: {
+            name: 'userId',
+            allowNull: false
+        },
+        onDelete: 'RESTRICT'
+    })
+   
+}
 
     return User
 }
