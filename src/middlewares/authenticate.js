@@ -1,25 +1,22 @@
-const createError = require('../utils/createError')
-const tokenService = require('../services/tokenService')
-const userService = require('../services/userService')
+const jwt = require('jsonwebtoken')
+const {User} = require('../models')
 
-module.exports = async (req,res,next) => {
-try {
+module.exports=(req, res, next) => {
     const authorization = req.headers.authorization
-if (!authorization || !authorization.startsWith('Bearer ')) {
-    createError('unauthorized',401)
-}
-const token = authorization.split(' ')[1]
-if (!token) {
-    createError('unauthorized',401)
-}
-const payload = tokenService.verify(token)
-const user = await userService.getUserById(payload.id)
-if (!user) {
-    createError('unauthorized',401)
-}
-req.user = user
-next()
-}catch(err){
-    next(err)
-}
+    if(!authorization || !authorization.startsWith('Bearer'))
+        return res.status(401).json({msg: 'Unauthorized'})
+    const token = authorization.split(' ')[1]
+    if(!token)
+        return res.status(401).json({msg: 'Unauthorized'})
+    const payload = jwt.verify(token, process.env.JWT_SECRET_KEY)
+
+    User.findOne({
+        where: {id: payload.id}
+    }).then(user => {
+        if(!user)
+            return res.status(401).json({msg: 'Unauthorized'})
+        req.user = user
+        next()
+    })
+
 }

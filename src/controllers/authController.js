@@ -1,54 +1,54 @@
-const {
-  validateRegister,
-  validateLogin,
-} = require("../validators/authValidator");
-const userService = require("../services/userService");
-const createError = require("../utils/createError");
-const bcryptService = require("../services/bcryptService");
-const tokenService = require("../services/tokenService");
+const { User } = require("../models");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken")
 
-exports.register = async (req, res, next) => {
-  try {
-    const value = validateRegister(req.body);
-    const isUserExist = await userService.checkEmailExist(
-      value.email 
-    );
+exports.register = (req, res, next) => {
+  const { firstName,lastName,email, password } = req.body;
+  
+  if (!email || !password) throw new Error("must have email & password");
 
-    if (isUserExist) {
-      createError("email already in use", 400);
-    }
+  if (password.length < 4 || password.length > 10)
+    throw new Error("Password must be 4-10 characters");
 
-    value.password = await bcryptService.hash(value.password);
-
-    const user = await userService.createUser(value);
-    const accessToken = tokenService.sign({ id: user.id });
-    res.status(200).json({ accessToken });
-  } catch (err) {
-    next(err);
-  }
+  bcrypt
+    .hash(password, 10)
+    .then((hashed) => {
+      return User.create({
+        firstName:firstName,
+        lastName:lastName,
+        email: email,
+        password: hashed,
+      });
+    })
+    .then((rs) => {
+      res.status(201).json({ msg: `user: '${rs.firstName}' created` });
+    })
+    .catch(next);
 };
 
-exports.login = async (req, res, next) => {
-  try {
-    const value = validateLogin(req.body);
-    const user = await userService.getUserByEmail(value.email);
-    if (!user) {
-      createError("invalid credential", 400);
-    }
-    const isCorrect = await bcryptService.compare(
-      value.password,
-      user.password
-    );
-    if (!isCorrect) {
-        createError("invalid credential", 400);
-    }
-        const accessToken = tokenService.sign({id: user.id})
-        res.status(200).json({accessToken})
-  } catch (err) {
-    next(err);
-  }
+exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findOne({
+    where: { email: email },
+  }).then((user) => {
+      if (!user) 
+        throw new Error("Cannot Login 1");
+      return Promise.all([ bcrypt.compare(password, user.password), Promise.resolve(user)]) 
+    }).then( ([pwOk, user]) => {
+        if(!pwOk)
+          throw new Error("Cannot Login 2")
+        const payload = {
+            id: user.id,
+            name: user.firstName
+        }
+        const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '60d'})
+        res.json({token : token})
+    }).catch(next)
 };
 
-exports.getMe = (req,res,next) => {
-  res.status(200).json({user:req.user})
+exports.getMe = (req, res, next) => {
+  const {id, firstName, } = req.user
+  res.json({id, firstName, })
 }
+
