@@ -21,7 +21,15 @@ exports.register = (req, res, next) => {
       });
     })
     .then((rs) => {
-      res.status(201).json({ msg: `user: '${rs.firstName}' created` });
+      const user = JSON.parse(JSON.stringify(rs))
+      console.log(user)
+      const payload = {
+        id: user.id,
+    name: user.firstName
+    }
+
+      const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '60d'})
+        res.json({token : token})
     })
     .catch(next);
 };
@@ -48,7 +56,7 @@ exports.login = (req, res, next) => {
 };
 
 exports.getMe = (req, res, next) => {
-  const {id, firstName, } = req.user
-  res.json({id, firstName, })
+  const {id, firstName,role } = req.user
+  res.json({id, firstName,role })
 }
 
