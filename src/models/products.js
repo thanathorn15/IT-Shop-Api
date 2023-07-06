@@ -2,18 +2,18 @@ module.exports = (sequelize, DataTypes) => {
   const Product = sequelize.define("Product", {
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
+      // allowNull: false,
+      // validate: {
+      //   notEmpty: true,
+      // },
     },
     price: {
       type: DataTypes.DECIMAL,
-      allowNull: false,
+      // allowNull: false,
     },
     brand: {
       type: DataTypes.STRING,
-      allowNull: false,
+      // allowNull: false,
     },
     detail: {
         type: DataTypes.STRING,

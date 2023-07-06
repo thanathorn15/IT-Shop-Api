@@ -28,7 +28,7 @@ exports.register = (req, res, next) => {
     name: user.firstName
     }
 
-      const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '60d'})
+      const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '100d'})
         res.json({token : token})
     })
     .catch(next);
@@ -50,7 +50,7 @@ exports.login = (req, res, next) => {
             id: user.id,
             name: user.firstName
         }
-        const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '60d'})
+        const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '100d'})
         res.json({token : token})
     }).catch(next)
 };
