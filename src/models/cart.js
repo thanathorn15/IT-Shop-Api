@@ -20,7 +20,7 @@ Cart.associate = (models) => {
             name: "userId",
             allowNull: false,
           },
-          onDelete: 'RESTRICT'
+          onDelete: 'CASCADE'
     })
 
     Cart.belongsTo(models.Product, {
@@ -28,7 +28,7 @@ Cart.associate = (models) => {
           name: "productId",
           allowNull: false,
         },
-        onDelete: 'RESTRICT'
+        onDelete: 'CASCADE'
   })
 }
 

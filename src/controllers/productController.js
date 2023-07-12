@@ -1,103 +1,99 @@
-const {Product} = require('../models')
+ const {Product} = require('../models')
 const fs = require('fs')
 const createError = require("../utils/createError");
 const uploadService = require("../services/uploadService");
 
-exports.getAllProducts = (req, res, next) => {
-    Product.findAll({
-    }).then(rs => {
-        res.json(rs)
-    }).catch(next)
-}
+exports.getAllProducts = async (req, res, next) => {
+  try {
+  const rs = await Product.findAll();
+  res.json(rs);
+  } catch (err) {
+  next(err);
+  }
+  };
 
-exports.getProductById = (req, res, next) => {
-    const {id} = req.params
-    Product.findOne({
-        attributes: ['name', 'price', 'brand','detail','image','categoryId'],
-        where : {id : id}
-    }).then( rs => {
-        res.json(rs)
-    }).catch(next)
+exports.getProductById = async (req,res,next) => {
+try {
+  const {id} = req.params
+  const rs = await Product.findOne({
+    attributes: ['name', 'price', 'brand','detail','image','categoryId'],
+    where : {id : id}
+  });
+  res.json(rs)
+}catch(err) {
+  next(err)
+}
 }
 
 exports.createProduct = async (req, res, next) => {
-    // const {name} = req.body
-   await Product.create(req.body)
-    .then(rs=> {
-        res.json(rs)
-    }).catch(next)
-
+   try {
+    const {name} = req.body
+ const rs = await Product.create(req.body)
+    res.json(rs)
+ 
+   }catch(err) {
+    next(err)
+   }
 }
-
-
-// exports.createProduct = async (req, res, next) => {
-//     try {
-//       await Product.create(req.body);
-  
-//       if (req.file) {
-//         const result = await uploadService.upload(req.file.path);
-//         value.image = result.secure_url;
-//         fs.unlinkSync(req.file.path); 
-//       }
-  
-//       res.status(201).json(value);
-//     } catch (err) {
-//       next(err);
-//     }
-//   };
-
-exports.updateProduct = (req, res, next) => {
+  exports.updateProduct = async (req, res, next) => {
+    try {
     const { id } = req.params;
-    const { name, price,brand,category,detail,image  } = req.body
-    Product.update(
-       {...req.body},  
+    const { name } = req.body;
+    const rs = await Product.update(
+      { ...req.body },
       {
         where: { id: id },
       }
-    )
-      .then((rs) => {
-        res.json(rs);
-      })
-      .catch(next);
-  };
-  exports.deleteProduct = (req, res, next) => {
-    const {id} = req.params
-    Product.destroy({
-        where : {id : id}
-    }).then(rs=> {
-        if (rs===0) {
-            throw new Error('Cannot Delete')
-        }
-        res.json(rs)
-    }).catch(next)
-}
+    );
+    
+    res.json(rs);
+  } catch (err) {
+    next(err);
+    }
+    };
+    
 
-// exports.createImage = async (req, res, next) => {
-//     try {
-//         if (!req.file) {
-//           createError('image is required', 400);
-//         }
-    
-//         const value = {
-//           productId: req.product.id
-//         };
-    
-//         if (req.body.message && req.body.message.trim()) {
-//           value.message = req.body.message.trim();
-//         }
-    
-//       if (req.file) {
-//         const result = await uploadService.upload(req.file.path);
-//         value.image = result.secure_url;
-//       }
+exports.deleteProduct = async (req, res, next) => {
+  try {
+  const { id } = req.params;
+  const rs = await Product.destroy({
+  where: { id: id },
+  });
+  if (rs === 0) {
+    throw new Error('Cannot Delete');
+  }
   
-//       const product = await Product.create(value);
-//       res.status(201).json({ id: id });
-//     } catch (err) {
-//       next(err);
-//     } finally {
-//       if (req.file) {
-//         fs.unlinkSync(req.file.path);
-//       }
-//     }
-//   };
+  res.json(rs);
+
+} catch (err) {
+  next(err);
+  }
+  };
+
+exports.uploadImage = async (req, res, next) => {
+    const {productId} = req.params
+
+    try {
+      if (!req.files.image ) {
+        createError(" image  is require");
+      }
+      const product = await Product.findOne({where: {id: productId }})
+      const modify = JSON.parse(JSON.stringify(product)) 
+      const updateValue = {...modify};
+      if (req.files.image) {
+        console.log(req.files.image[0].path)
+        const result = await uploadService.upload(req.files.image[0].path);
+        updateValue.image = result.secure_url;
+      }
+
+     console.log(updateValue);
+      await Product.update(updateValue , { where: { id: productId } });
+      res.status(200).json(updateValue);
+    } catch (err) {
+      next(err);
+    } finally {
+      if (req.files.image) {
+        fs.unlinkSync(req.files.image[0].path);
+      }
+    }
+  };

@@ -1,32 +1,37 @@
 const { Cart } = require("../models");
+const { Product } = require("../models");
+const { User } = require("../models");
 
-exports.getCart = (req, res, next) => {
-  Cart.findAll({})
-    .then((rs) => {
-      res.json(rs);
-    })
-    .catch(next);
+exports.getCart = async (req, res, next) => {
+  try {
+    const rs = await Cart.findAll({});
+    res.json(rs);
+  } catch (err) {
+    next(err);
+  }
 };
 
-// exports.getCartById = (req, res, next) => {
-//   const { id } = req.user;
-//   console.log(id);
-//   Cart.findOne({
-//     attributes: ["quantity", "price", "userId", "productId"],
-//     where: { userId: id },
-//   })
-//     .then((rs) => {
-//       console.log(rs);
-//       res.json(rs);
-//     })
-//     .catch(next);
-// };
+exports.getCartByUserId = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const rs = await Cart.findAll({
+      include: [
+        { model: User, where: { id: id }, attributes: ["id"] },
+        { model: Product },
+      ],
+    });
+    res.status(200).json(rs);
+  } catch (err) {
+    next(err);
+  }
+};
 
-exports.createCart = (req, res, next) => {
+exports.createCart = async (req, res, next) => {
+  try {
   const { quantity, price, userId, productId } = req.body;
-  Cart.create(req.body)
-    .then((rs) => {
-      res.json(rs);
-    })
-    .catch(next);
-};
+  const rs = await Cart.create(req.body);
+  res.json(rs);
+  } catch (err) {
+  next(err);
+  }
+  };

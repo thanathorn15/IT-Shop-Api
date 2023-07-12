@@ -2,58 +2,66 @@ const { User } = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
 
-exports.register = (req, res, next) => {
-  const { firstName,lastName,email, password } = req.body;
+exports.register = async (req, res, next) => {
+  try {
+  const { firstName, lastName, email, password } = req.body;
+  if (!email || !password) {
+    throw new Error("must have email & password");
+  }
   
-  if (!email || !password) throw new Error("must have email & password");
-
-  if (password.length < 4 || password.length > 10)
+  if (password.length < 4 || password.length > 10) {
     throw new Error("Password must be 4-10 characters");
+  }
+  
+  const hashed = await bcrypt.hash(password, 10);
+  const user = await User.create({
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    password: hashed,
+  });
+  
+  const payload = {
+    id: user.id,
+    name: user.firstName,
+  };
+  
+  const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, { expiresIn: '100d' });
+  res.json({ token: token });
+} catch (err) {
+  next(err);
+  }
+  };
+  
 
-  bcrypt
-    .hash(password, 10)
-    .then((hashed) => {
-      return User.create({
-        firstName:firstName,
-        lastName:lastName,
-        email: email,
-        password: hashed,
-      });
-    })
-    .then((rs) => {
-      const user = JSON.parse(JSON.stringify(rs))
-      console.log(user)
-      const payload = {
-        id: user.id,
-    name: user.firstName
+  exports.login = async (req, res, next) => {
+    try {
+    const { email, password } = req.body;
+    const user = await User.findOne({
+      where: { email: email },
+    });
+    
+    if (!user) {
+      throw new Error("Cannot Login 1");
     }
-
-      const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '100d'})
-        res.json({token : token})
-    })
-    .catch(next);
-};
-
-exports.login = (req, res, next) => {
-  const { email, password } = req.body;
-
-  User.findOne({
-    where: { email: email },
-  }).then((user) => {
-      if (!user) 
-        throw new Error("Cannot Login 1");
-      return Promise.all([ bcrypt.compare(password, user.password), Promise.resolve(user)]) 
-    }).then( ([pwOk, user]) => {
-        if(!pwOk)
-          throw new Error("Cannot Login 2")
-        const payload = {
-            id: user.id,
-            name: user.firstName
-        }
-        const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, {expiresIn: '100d'})
-        res.json({token : token})
-    }).catch(next)
-};
+    
+    const pwOk = await bcrypt.compare(password, user.password);
+    
+    if (!pwOk) {
+      throw new Error("Cannot Login 2");
+    }
+    
+    const payload = {
+      id: user.id,
+      name: user.firstName,
+    };
+    
+    const token = jwt.sign(payload, `${process.env.JWT_SECRET_KEY}`, { expiresIn: '100d' });
+    res.json({ token: token });
+  } catch (err) {
+    next(err);
+    }
+    };    
 
 exports.getMe = (req, res, next) => {
   const {id, firstName,role } = req.user

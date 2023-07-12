@@ -61,7 +61,7 @@ User.associate = (models) => {
             name: 'userId',
             allowNull: false
         },
-        onDelete: 'RESTRICT'
+        onDelete: 'CASCADE'
     })
     User.hasMany(models.Order, {
         foreignKey: {

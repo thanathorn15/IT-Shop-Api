@@ -44,7 +44,7 @@ Product.hasMany(models.Cart, {
       name: "productId",
       allowNull: false,
     },
-    onDelete: 'RESTRICT'
+    onDelete: 'CASCADE'
 })
 
 Product.hasMany(models.OrderItem, {
