@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const authRoute = require("./routes/authRoute");
 const productRoute = require("./routes/productRoute");
 const cartRoute = require("./routes/cartRoute");
+const orderRoute = require("./routes/orderRoute");
 
 const notFoundMiddleware = require("./middlewares/notfound");
 const errorMiddleware = require("./middlewares/error");
@@ -25,7 +26,8 @@ app.use(express.json());
 app.use("/auth", authRoute);
 app.use("/product", productRoute);
 app.use("/cart", authenticate, cartRoute);
-// app.use("/order", authenticate, orderRoute);
+app.use("/order", authenticate, orderRoute);
+
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

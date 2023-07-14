@@ -28,7 +28,7 @@ exports.getCartByUserId = async (req, res, next) => {
 
 exports.createCart = async (req, res, next) => {
   try {
-  const { quantity, price, userId, productId } = req.body;
+  const {userId } = req.body;
   const rs = await Cart.create(req.body);
   res.json(rs);
   } catch (err) {
